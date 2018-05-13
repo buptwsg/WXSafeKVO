@@ -13,6 +13,8 @@
 		B27CC18D20A4899F00125F2E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B27CC18C20A4899F00125F2E /* Assets.xcassets */; };
 		B27CC19020A4899F00125F2E /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B27CC18E20A4899F00125F2E /* LaunchScreen.storyboard */; };
 		B27CC19320A4899F00125F2E /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = B27CC19220A4899F00125F2E /* main.m */; };
+		B29C2F8220A7CE7F00F1022D /* NSObject+WXSafeKVO.h in Headers */ = {isa = PBXBuildFile; fileRef = B29C2F8020A7CE7F00F1022D /* NSObject+WXSafeKVO.h */; };
+		B29C2F8320A7CE7F00F1022D /* NSObject+WXSafeKVO.m in Sources */ = {isa = PBXBuildFile; fileRef = B29C2F8120A7CE7F00F1022D /* NSObject+WXSafeKVO.m */; };
 		B2B9CEB020A48A0A00642271 /* WXSafeKVO.h in Headers */ = {isa = PBXBuildFile; fileRef = B2B9CEAE20A48A0A00642271 /* WXSafeKVO.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B2B9CEB320A48A0A00642271 /* WXSafeKVO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B2B9CEAC20A48A0A00642271 /* WXSafeKVO.framework */; };
 		B2B9CEB420A48A0A00642271 /* WXSafeKVO.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B2B9CEAC20A48A0A00642271 /* WXSafeKVO.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -53,6 +55,8 @@
 		B27CC18F20A4899F00125F2E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		B27CC19120A4899F00125F2E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B27CC19220A4899F00125F2E /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		B29C2F8020A7CE7F00F1022D /* NSObject+WXSafeKVO.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSObject+WXSafeKVO.h"; sourceTree = "<group>"; };
+		B29C2F8120A7CE7F00F1022D /* NSObject+WXSafeKVO.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSObject+WXSafeKVO.m"; sourceTree = "<group>"; };
 		B2B9CEAC20A48A0A00642271 /* WXSafeKVO.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = WXSafeKVO.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		B2B9CEAE20A48A0A00642271 /* WXSafeKVO.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WXSafeKVO.h; sourceTree = "<group>"; };
 		B2B9CEAF20A48A0A00642271 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -116,6 +120,8 @@
 			children = (
 				B2B9CEAE20A48A0A00642271 /* WXSafeKVO.h */,
 				B2B9CEAF20A48A0A00642271 /* Info.plist */,
+				B29C2F8020A7CE7F00F1022D /* NSObject+WXSafeKVO.h */,
+				B29C2F8120A7CE7F00F1022D /* NSObject+WXSafeKVO.m */,
 			);
 			path = WXSafeKVO;
 			sourceTree = "<group>";
@@ -128,6 +134,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B2B9CEB020A48A0A00642271 /* WXSafeKVO.h in Headers */,
+				B29C2F8220A7CE7F00F1022D /* NSObject+WXSafeKVO.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -242,6 +249,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B29C2F8320A7CE7F00F1022D /* NSObject+WXSafeKVO.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
