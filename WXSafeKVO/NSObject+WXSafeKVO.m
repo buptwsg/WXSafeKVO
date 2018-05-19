@@ -162,8 +162,8 @@ static void *WXKVOControllerKey = &WXKVOControllerKey;
         //the observer has not been added, do nothing
     }
     else {
-        [self.observed wx_removeObserver: self forKeyPath: info->_keyPath context: (__bridge void*)savedInfo];
         [registeredInfos removeObject: savedInfo];
+        [self.observed wx_removeObserver: self forKeyPath: info->_keyPath context: (__bridge void*)savedInfo];
     }
 }
 
