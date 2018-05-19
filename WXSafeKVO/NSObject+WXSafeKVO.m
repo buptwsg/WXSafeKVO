@@ -119,10 +119,7 @@ static void *WXKVOControllerKey = &WXKVOControllerKey;
 
 - (void)dealloc {
     [self.observerInfos enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull key, NSMutableSet<_WXKVOInfo *> * _Nonnull obj, BOOL * _Nonnull stop) {
-        NSSet<_WXKVOInfo*> *registeredInfos = [obj copy];
-        for (_WXKVOInfo *info in registeredInfos) {
-            [self removeKVOInfo: info];
-        }
+        [self.observed wx_removeObserver: self forKeyPath: key];
     }];
 }
 

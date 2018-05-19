@@ -14,6 +14,7 @@ static void *context = &context;
 @interface ViewController ()
 
 @property (strong, nonatomic) UIView *observee;
+@property (strong, nonatomic) dispatch_queue_t queue;
 
 @end
 
@@ -31,10 +32,19 @@ static void *context = &context;
     [self.observee addObserver: self forKeyPath: @"backgroundColor" options: NSKeyValueObservingOptionInitial action: @selector(kvoSelector:change:)];
     [self.observee addObserver: self forKeyPath: @"backgroundColor" options: NSKeyValueObservingOptionInitial block:^(id  _Nonnull observer, id  _Nonnull object, NSDictionary<NSKeyValueChangeKey,id> * _Nonnull change) {
         NSLog(@"observer is %@, object is %@, change is %@", observer, object, change);
+        [self.observee removeObserver: self forKeyPath: @"backgroundColor"];
     }];
     [self.observee addObserver: self forKeyPath: @"backgroundColor" options: NSKeyValueObservingOptionInitial context: context];
     
-    
+    self.queue = dispatch_queue_create("com.haha.test", DISPATCH_QUEUE_SERIAL);
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        dispatch_async(self.queue, ^{
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self.observee removeFromSuperview];
+                self.observee = nil;
+            });
+        });
+    });
 }
 
 - (void)didReceiveMemoryWarning {
