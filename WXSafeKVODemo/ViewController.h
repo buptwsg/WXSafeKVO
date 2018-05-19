@@ -13,3 +13,7 @@
 
 @end
 
+@interface Observer: NSObject
+
+@end
+

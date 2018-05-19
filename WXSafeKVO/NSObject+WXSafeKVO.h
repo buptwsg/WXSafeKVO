@@ -10,9 +10,12 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/**
+ The key for changed key path. When using block or selector to receive callback, the dictionary contains this key to indicate which key path's value changed.
+ */
 extern NSString * const WXKVONotificationKeyPathKey;
 
-typedef void (^WXKVONotificationBlock)(id object, NSString *keyPath, NSDictionary<NSKeyValueChangeKey, id> *change);
+typedef void (^WXKVONotificationBlock)(id observer, id object, NSDictionary<NSKeyValueChangeKey, id> *change);
 
 @interface NSObject (WXSafeKVO)
 
