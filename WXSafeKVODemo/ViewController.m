@@ -14,6 +14,8 @@ static void *context = &context;
 @interface ViewController ()
 
 @property (strong, nonatomic) UIView *observee;
+@property (strong, nonatomic) Observer *observer;
+
 @property (strong, nonatomic) dispatch_queue_t queue;
 
 @end
@@ -29,10 +31,11 @@ static void *context = &context;
     [self.view addSubview: self.observee];
     
     NSLog(@"kvo context = %p", context);
+    __weak typeof(self) weakSelf = self;
     [self.observee addObserver: self forKeyPath: @"backgroundColor" options: NSKeyValueObservingOptionInitial action: @selector(kvoSelector:change:)];
     [self.observee addObserver: self forKeyPath: @"backgroundColor" options: NSKeyValueObservingOptionInitial block:^(id  _Nonnull observer, id  _Nonnull object, NSDictionary<NSKeyValueChangeKey,id> * _Nonnull change) {
         NSLog(@"observer is %@, object is %@, change is %@", observer, object, change);
-        [self.observee removeObserver: self forKeyPath: @"backgroundColor"];
+        [weakSelf.observee removeObserver: weakSelf forKeyPath: @"backgroundColor"];
     }];
     [self.observee addObserver: self forKeyPath: @"backgroundColor" options: NSKeyValueObservingOptionInitial context: context];
     
@@ -45,6 +48,12 @@ static void *context = &context;
             });
         });
     });
+    
+    self.observer = [[Observer alloc] init];
+    [self.observee addObserver: self.observer forKeyPath: @"backgroundColor" options: kNilOptions action: @selector(kvoSelector)];
+    self.observer = nil;
+    
+    self.observee.backgroundColor = [UIColor greenColor];
 }
 
 - (void)didReceiveMemoryWarning {
@@ -66,6 +75,9 @@ static void *context = &context;
 
 @implementation Observer
 
+- (void)kvoSelector {
+    NSLog(@"this callback should not be called");
+}
 
 @end
 

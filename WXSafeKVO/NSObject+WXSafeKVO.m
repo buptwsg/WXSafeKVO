@@ -13,6 +13,7 @@ NSString * const WXKVONotificationKeyPathKey = @"WXKVONotificationKeyPathKey";
 
 static void *WXKVOControllerKey = &WXKVOControllerKey;
 
+#pragma mark - Declarations for the swizzled methods
 @interface NSObject (WXSafeKVOSwizzled)
 
 - (void)wx_addObserver:(NSObject*)observer forKeyPath:(NSString*)keyPath options:(NSKeyValueObservingOptions)options context:(void*)context;
@@ -23,6 +24,19 @@ static void *WXKVOControllerKey = &WXKVOControllerKey;
 
 @end
 
+#pragma mark - _WXKVOInfo
+
+typedef NS_ENUM(uint8_t, _WXKVOInfoState) {
+    _WXKVOInfoStateInitial,
+    
+    /// whether the observer registration in Foundation has completed
+    _WXKVOInfoStateObserving,
+    
+    /// whether `unobserve` was called before observer registration in Foundation has completed
+    /// this could happen when `NSKeyValueObservingOptionInitial` is one of the NSKeyValueObservingOptions
+    _WXKVOInfoStateNotObserving
+};
+
 @interface _WXKVOInfo: NSObject {
     @public
     __weak NSObject *_observer;
@@ -31,6 +45,7 @@ static void *WXKVOControllerKey = &WXKVOControllerKey;
     WXKVONotificationBlock _block;
     SEL _action;
     void *_context;
+    _WXKVOInfoState _state;
 }
 
 - (instancetype)initWithObserver: (NSObject*)observer keyPath: (NSString*)keyPath options: (NSKeyValueObservingOptions)options block: (WXKVONotificationBlock)block action: (SEL)action context: (nullable void *)context NS_DESIGNATED_INITIALIZER;
@@ -60,6 +75,7 @@ static void *WXKVOControllerKey = &WXKVOControllerKey;
         _block = [block copy];
         _action = action;
         _context = context;
+        _state = _WXKVOInfoStateInitial;
     }
     return self;
 }
@@ -142,6 +158,17 @@ static void *WXKVOControllerKey = &WXKVOControllerKey;
     if (nil == savedInfo) {
         [registeredInfos addObject: info];
         [self.observed wx_addObserver: self forKeyPath: info->_keyPath options: info->_options context: (__bridge void*)info];
+        
+        if (info->_state == _WXKVOInfoStateInitial) {
+            info->_state = _WXKVOInfoStateObserving;
+        }
+        else if (info->_state == _WXKVOInfoStateNotObserving) {
+            // this could happen when `NSKeyValueObservingOptionInitial` is one of the NSKeyValueObservingOptions,
+            // and the observer is unregistered within the callback block.
+            // at this time the object has been registered as an observer (in Foundation KVO),
+            // so we can safely remove the observer.
+            [self.observed wx_removeObserver: self forKeyPath: info->_keyPath context: (__bridge void*)info];
+        }
     }
     else {
         //the observer has already been added, do nothing
@@ -160,7 +187,11 @@ static void *WXKVOControllerKey = &WXKVOControllerKey;
     }
     else {
         [registeredInfos removeObject: savedInfo];
-        [self.observed wx_removeObserver: self forKeyPath: info->_keyPath context: (__bridge void*)savedInfo];
+        
+        if (savedInfo->_state == _WXKVOInfoStateObserving) {
+            [self.observed wx_removeObserver: self forKeyPath: info->_keyPath context: (__bridge void*)savedInfo];
+        }
+        savedInfo->_state = _WXKVOInfoStateNotObserving;
     }
 }
 
