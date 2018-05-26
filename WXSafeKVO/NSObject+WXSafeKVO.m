@@ -13,17 +13,6 @@ NSString * const WXKVONotificationKeyPathKey = @"WXKVONotificationKeyPathKey";
 
 static void *WXKVOControllerKey = &WXKVOControllerKey;
 
-#pragma mark - Declarations for the swizzled methods
-@interface NSObject (WXSafeKVOSwizzled)
-
-- (void)wx_addObserver:(NSObject*)observer forKeyPath:(NSString*)keyPath options:(NSKeyValueObservingOptions)options context:(void*)context;
-
-- (void)wx_removeObserver:(NSObject*)observer forKeyPath:(NSString*)keyPath context:(void*)context;
-
-- (void)wx_removeObserver:(NSObject*)observer forKeyPath:(NSString*)keyPath;
-
-@end
-
 #pragma mark - _WXKVOInfo
 
 typedef NS_ENUM(uint8_t, _WXKVOInfoState) {
@@ -134,8 +123,12 @@ typedef NS_ENUM(uint8_t, _WXKVOInfoState) {
 @implementation _WXKVOController
 
 - (void)dealloc {
+    NSLog(@"when dealloc, observerInfos is :\n %@", self.observerInfos);
     [self.observerInfos enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull key, NSMutableSet<_WXKVOInfo *> * _Nonnull obj, BOOL * _Nonnull stop) {
-        [self.observed wx_removeObserver: self forKeyPath: key];
+        if (obj.count > 0) {
+            NSLog(@"call remove observer");
+            [self.observed removeObserver: self forKeyPath: key];
+        }
     }];
 }
 
@@ -157,7 +150,8 @@ typedef NS_ENUM(uint8_t, _WXKVOInfoState) {
     _WXKVOInfo *savedInfo = [registeredInfos member: info];
     if (nil == savedInfo) {
         [registeredInfos addObject: info];
-        [self.observed wx_addObserver: self forKeyPath: info->_keyPath options: info->_options context: (__bridge void*)info];
+        NSLog(@"after add kvoInfo, infos is %@", self.observerInfos);
+        [self.observed addObserver: self forKeyPath: info->_keyPath options: info->_options context: (__bridge void*)info];
         
         if (info->_state == _WXKVOInfoStateInitial) {
             info->_state = _WXKVOInfoStateObserving;
@@ -167,11 +161,13 @@ typedef NS_ENUM(uint8_t, _WXKVOInfoState) {
             // and the observer is unregistered within the callback block.
             // at this time the object has been registered as an observer (in Foundation KVO),
             // so we can safely remove the observer.
-            [self.observed wx_removeObserver: self forKeyPath: info->_keyPath context: (__bridge void*)info];
+            [self.observed removeObserver: self forKeyPath: info->_keyPath context: (__bridge void*)info];
         }
     }
     else {
-        //the observer has already been added, do nothing
+#if _DEBUG
+        NSLog(@"the observer has already been added, do nothing");
+#endif
     }
 }
 
@@ -183,13 +179,16 @@ typedef NS_ENUM(uint8_t, _WXKVOInfoState) {
     
     _WXKVOInfo *savedInfo = [registeredInfos member: info];
     if (nil == savedInfo) {
-        //the observer has not been added, do nothing
+#if _DEBUG
+        NSLog(@"the observer has not been added, do nothing");
+#endif
     }
     else {
         [registeredInfos removeObject: savedInfo];
+        NSLog(@"remove self.observerInfos is %@", self.observerInfos);
         
         if (savedInfo->_state == _WXKVOInfoStateObserving) {
-            [self.observed wx_removeObserver: self forKeyPath: info->_keyPath context: (__bridge void*)savedInfo];
+            [self.observed removeObserver: self forKeyPath: info->_keyPath context: (__bridge void*)savedInfo];
         }
         savedInfo->_state = _WXKVOInfoStateNotObserving;
     }
@@ -199,8 +198,11 @@ typedef NS_ENUM(uint8_t, _WXKVOInfoState) {
     _WXKVOInfo *kvoInfo = (__bridge _WXKVOInfo*)context;
     NSObject *observer = kvoInfo->_observer;
     if (nil == observer) {
+        NSLog(@"observeValueForKeyPath before remove, observerInfos is %@, kvoInfo is %@", self.observerInfos, kvoInfo);
         NSMutableSet<_WXKVOInfo*> *registeredInfos = self.observerInfos[keyPath];
         [registeredInfos removeObject: kvoInfo];
+        [self.observed removeObserver: self forKeyPath: kvoInfo->_keyPath context: (void*)kvoInfo];
+        NSLog(@"observeValueForKeyPath after remove, observerInfos is %@", self.observerInfos);
         return;
     }
     
@@ -228,56 +230,38 @@ typedef NS_ENUM(uint8_t, _WXKVOInfoState) {
 
 @implementation NSObject (WXSafeKVO)
 
-+ (void)load {
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        Method origin = class_getInstanceMethod(self,    @selector(addObserver:forKeyPath:options:context:));
-        Method hooked = class_getInstanceMethod(self, @selector(wx_addObserver:forKeyPath:options:context:));
-        method_exchangeImplementations(origin, hooked);
-        
-        origin = class_getInstanceMethod(self,    @selector(removeObserver:forKeyPath:context:));
-        hooked = class_getInstanceMethod(self, @selector(wx_removeObserver:forKeyPath:context:));
-        method_exchangeImplementations(origin, hooked);
-        
-        origin = class_getInstanceMethod(self,    @selector(removeObserver:forKeyPath:));
-        hooked = class_getInstanceMethod(self, @selector(wx_removeObserver:forKeyPath:));
-        method_exchangeImplementations(origin, hooked);
-    });
-}
-
 #pragma mark - API
-- (void)addObserver:(NSObject *)observer forKeyPath:(NSString *)keyPath options:(NSKeyValueObservingOptions)options block:(WXKVONotificationBlock)block {
+- (void)wx_addObserver:(NSObject *)observer forKeyPath:(NSString *)keyPath options:(NSKeyValueObservingOptions)options block:(WXKVONotificationBlock)block {
     _WXKVOInfo *kvoInfo = [[_WXKVOInfo alloc] initWithObserver: observer keyPath: keyPath options: options block: block];
     [self.kvoController addKVOInfo: kvoInfo];
 }
 
-- (void)addObserver:(NSObject *)observer forKeyPaths:(NSArray<NSString *> *)keyPaths options:(NSKeyValueObservingOptions)options block:(WXKVONotificationBlock)block {
+- (void)wx_addObserver:(NSObject *)observer forKeyPaths:(NSArray<NSString *> *)keyPaths options:(NSKeyValueObservingOptions)options block:(WXKVONotificationBlock)block {
     for (NSString *keyPath in keyPaths) {
-        [self addObserver: observer forKeyPath: keyPath options: options block: block];
+        [self wx_addObserver: observer forKeyPath: keyPath options: options block: block];
     }
 }
 
-- (void)addObserver:(NSObject *)observer forKeyPath:(NSString *)keyPath options:(NSKeyValueObservingOptions)options action:(SEL)action {
+- (void)wx_addObserver:(NSObject *)observer forKeyPath:(NSString *)keyPath options:(NSKeyValueObservingOptions)options action:(SEL)action {
     _WXKVOInfo *kvoInfo = [[_WXKVOInfo alloc] initWithObserver: observer keyPath: keyPath options: options action: action];
     [self.kvoController addKVOInfo: kvoInfo];
 }
 
-- (void)addObserver:(NSObject *)observer forKeyPaths:(NSArray<NSString *> *)keyPaths options:(NSKeyValueObservingOptions)options action:(SEL)action {
+- (void)wx_addObserver:(NSObject *)observer forKeyPaths:(NSArray<NSString *> *)keyPaths options:(NSKeyValueObservingOptions)options action:(SEL)action {
     for (NSString *keyPath in keyPaths) {
-        [self addObserver: observer forKeyPath: keyPath options: options action: action];
+        [self wx_addObserver: observer forKeyPath: keyPath options: options action: action];
     }
 }
 
-- (void)addObserver:(NSObject *)observer forKeyPaths:(NSArray<NSString *> *)keyPaths options:(NSKeyValueObservingOptions)options context:(void *)context {
-    for (NSString *keyPath in keyPaths) {
-        [self addObserver: observer forKeyPath: keyPath options: options context: context];
-    }
-}
-
-#pragma mark - Swizzled
 - (void)wx_addObserver:(NSObject*)observer forKeyPath:(NSString*)keyPath options:(NSKeyValueObservingOptions)options context:(void*)context {
     _WXKVOInfo *kvoInfo = [[_WXKVOInfo alloc] initWithObserver: observer keyPath: keyPath options: options context: context];
     [self.kvoController addKVOInfo: kvoInfo];
+}
+
+- (void)wx_addObserver:(NSObject *)observer forKeyPaths:(NSArray<NSString *> *)keyPaths options:(NSKeyValueObservingOptions)options context:(void *)context {
+    for (NSString *keyPath in keyPaths) {
+        [self wx_addObserver: observer forKeyPath: keyPath options: options context: context];
+    }
 }
 
 - (void)wx_removeObserver:(NSObject*)observer forKeyPath:(NSString*)keyPath context:(void*)context {

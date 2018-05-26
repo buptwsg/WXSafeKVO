@@ -19,15 +19,21 @@ typedef void (^WXKVONotificationBlock)(id observer, id object, NSDictionary<NSKe
 
 @interface NSObject (WXSafeKVO)
 
-- (void)addObserver: (NSObject*)observer forKeyPath: (NSString*)keyPath options: (NSKeyValueObservingOptions)options block: (WXKVONotificationBlock)block;
+- (void)wx_addObserver: (NSObject*)observer forKeyPath: (NSString*)keyPath options: (NSKeyValueObservingOptions)options block: (WXKVONotificationBlock)block;
 
-- (void)addObserver: (NSObject*)observer forKeyPaths: (NSArray<NSString*> *)keyPaths options: (NSKeyValueObservingOptions)options block: (WXKVONotificationBlock)block;
+- (void)wx_addObserver: (NSObject*)observer forKeyPaths: (NSArray<NSString*> *)keyPaths options: (NSKeyValueObservingOptions)options block: (WXKVONotificationBlock)block;
 
-- (void)addObserver: (NSObject*)observer forKeyPath: (NSString*)keyPath options: (NSKeyValueObservingOptions)options action: (SEL)action;
+- (void)wx_addObserver: (NSObject*)observer forKeyPath: (NSString*)keyPath options: (NSKeyValueObservingOptions)options action: (SEL)action;
 
-- (void)addObserver: (NSObject*)observer forKeyPaths: (NSArray<NSString*> *)keyPaths options: (NSKeyValueObservingOptions)options action: (SEL)action;
+- (void)wx_addObserver: (NSObject*)observer forKeyPaths: (NSArray<NSString*> *)keyPaths options: (NSKeyValueObservingOptions)options action: (SEL)action;
 
-- (void)addObserver: (NSObject*)observer forKeyPaths: (NSArray<NSString*> *)keyPaths options: (NSKeyValueObservingOptions)options context: (nullable void *)context;
+- (void)wx_addObserver: (NSObject*)observer forKeyPaths: (NSArray<NSString*> *)keyPaths options: (NSKeyValueObservingOptions)options context: (nullable void *)context;
+
+- (void)wx_addObserver: (NSObject*)observer forKeyPath: (NSString*)keyPath options: (NSKeyValueObservingOptions)options context: (void*)context;
+
+- (void)wx_removeObserver:(NSObject*)observer forKeyPath:(NSString*)keyPath context:(void*)context;
+
+- (void)wx_removeObserver:(NSObject*)observer forKeyPath:(NSString*)keyPath;
 
 @end
 
