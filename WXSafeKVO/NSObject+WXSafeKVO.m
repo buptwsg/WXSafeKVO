@@ -113,7 +113,9 @@ typedef NS_ENUM(uint8_t, _WXKVOInfoState) {
 }
 @end
 
-@interface _WXKVOController: NSObject
+@interface _WXKVOController: NSObject {
+    NSRecursiveLock *_lock;
+}
 
 @property (nonatomic, unsafe_unretained) NSObject *observed;
 @property (nonatomic, strong) NSMutableDictionary<NSString *, NSMutableSet<_WXKVOInfo*> *> *observerInfos;
@@ -140,11 +142,14 @@ typedef NS_ENUM(uint8_t, _WXKVOInfoState) {
     self = [super init];
     if (self) {
         _observerInfos = [NSMutableDictionary dictionary];
+        _lock = [[NSRecursiveLock alloc] init];
     }
     return self;
 }
 
 - (void)addKVOInfo:(_WXKVOInfo *)info {
+    [_lock lock];
+    
     NSMutableSet<_WXKVOInfo*> *registeredInfos = self.observerInfos[info->_keyPath];
     if (nil == registeredInfos) {
         registeredInfos = [NSMutableSet set];
@@ -186,11 +191,14 @@ typedef NS_ENUM(uint8_t, _WXKVOInfoState) {
         NSLog(@"the observer has already been added, do nothing");
 #endif
     }
+    [_lock unlock];
 }
 
 - (void)removeKVOInfo:(_WXKVOInfo *)info {
+    [_lock lock];
     NSMutableSet<_WXKVOInfo*> *registeredInfos = self.observerInfos[info->_keyPath];
     if (nil == registeredInfos) {
+        [_lock unlock];
         return;
     }
     
@@ -208,6 +216,7 @@ typedef NS_ENUM(uint8_t, _WXKVOInfoState) {
         }
         savedInfo->_state = _WXKVOInfoStateNotObserving;
     }
+    [_lock unlock];
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context {
