@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B21FC90320BA46700086F8E6 /* NSObject+WXDeallocBlock.h in Headers */ = {isa = PBXBuildFile; fileRef = B21FC90120BA46700086F8E6 /* NSObject+WXDeallocBlock.h */; };
+		B21FC90420BA46700086F8E6 /* NSObject+WXDeallocBlock.m in Sources */ = {isa = PBXBuildFile; fileRef = B21FC90220BA46700086F8E6 /* NSObject+WXDeallocBlock.m */; };
 		B27CC18520A4899D00125F2E /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = B27CC18420A4899D00125F2E /* AppDelegate.m */; };
 		B27CC18820A4899D00125F2E /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B27CC18720A4899D00125F2E /* ViewController.m */; };
 		B27CC18B20A4899D00125F2E /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B27CC18920A4899D00125F2E /* Main.storyboard */; };
@@ -45,6 +47,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		B21FC90120BA46700086F8E6 /* NSObject+WXDeallocBlock.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSObject+WXDeallocBlock.h"; sourceTree = "<group>"; };
+		B21FC90220BA46700086F8E6 /* NSObject+WXDeallocBlock.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSObject+WXDeallocBlock.m"; sourceTree = "<group>"; };
 		B27CC18020A4899D00125F2E /* WXSafeKVODemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WXSafeKVODemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B27CC18320A4899D00125F2E /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		B27CC18420A4899D00125F2E /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -122,6 +126,8 @@
 				B2B9CEAF20A48A0A00642271 /* Info.plist */,
 				B29C2F8020A7CE7F00F1022D /* NSObject+WXSafeKVO.h */,
 				B29C2F8120A7CE7F00F1022D /* NSObject+WXSafeKVO.m */,
+				B21FC90120BA46700086F8E6 /* NSObject+WXDeallocBlock.h */,
+				B21FC90220BA46700086F8E6 /* NSObject+WXDeallocBlock.m */,
 			);
 			path = WXSafeKVO;
 			sourceTree = "<group>";
@@ -133,6 +139,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B21FC90320BA46700086F8E6 /* NSObject+WXDeallocBlock.h in Headers */,
 				B2B9CEB020A48A0A00642271 /* WXSafeKVO.h in Headers */,
 				B29C2F8220A7CE7F00F1022D /* NSObject+WXSafeKVO.h in Headers */,
 			);
@@ -250,6 +257,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B29C2F8320A7CE7F00F1022D /* NSObject+WXSafeKVO.m in Sources */,
+				B21FC90420BA46700086F8E6 /* NSObject+WXDeallocBlock.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

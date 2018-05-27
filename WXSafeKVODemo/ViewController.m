@@ -39,7 +39,7 @@ static void *context = &context;
     [self.observee wx_addObserver: self forKeyPath: @"backgroundColor" options: NSKeyValueObservingOptionInitial context: context];
     
     self.queue = dispatch_queue_create("com.haha.test", DISPATCH_QUEUE_SERIAL);
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
         dispatch_async(self.queue, ^{
             dispatch_async(dispatch_get_main_queue(), ^{
                 [self.observee removeFromSuperview];
@@ -54,6 +54,12 @@ static void *context = &context;
     
     NSLog(@"trigger notification again");
     self.observee.backgroundColor = [UIColor greenColor];
+    
+    [self.observee wx_addObserver: self forKeyPath: @"backgroundColor" options: kNilOptions block:^(id  _Nonnull observer, id  _Nonnull object, NSDictionary<NSKeyValueChangeKey,id> * _Nonnull change) {
+    }];
+    
+    [self.observee wx_removeObserver: self forKeyPath: @"backgroundColor"];
+    [self.observee wx_removeObserver: self forKeyPath: @"backgroundColor" context: context];
 }
 
 - (void)didReceiveMemoryWarning {
@@ -75,6 +81,9 @@ static void *context = &context;
 
 @implementation Observer
 
+- (void)dealloc {
+    NSLog(@"Observer dealloc is called");
+}
 - (void)kvoSelector {
     NSLog(@"this callback should not be called");
 }

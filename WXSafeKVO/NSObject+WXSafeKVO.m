@@ -8,6 +8,7 @@
 
 #import <objc/runtime.h>
 #import "NSObject+WXSafeKVO.h"
+#import "NSObject+WXDeallocBlock.h"
 
 NSString * const WXKVONotificationKeyPathKey = @"WXKVONotificationKeyPathKey";
 
@@ -35,6 +36,7 @@ typedef NS_ENUM(uint8_t, _WXKVOInfoState) {
     SEL _action;
     void *_context;
     _WXKVOInfoState _state;
+    NSUInteger _hash;
 }
 
 - (instancetype)initWithObserver: (NSObject*)observer keyPath: (NSString*)keyPath options: (NSKeyValueObservingOptions)options block: (WXKVONotificationBlock)block action: (SEL)action context: (nullable void *)context NS_DESIGNATED_INITIALIZER;
@@ -65,6 +67,7 @@ typedef NS_ENUM(uint8_t, _WXKVOInfoState) {
         _action = action;
         _context = context;
         _state = _WXKVOInfoStateInitial;
+        _hash = [_observer hash];
     }
     return self;
 }
@@ -90,7 +93,7 @@ typedef NS_ENUM(uint8_t, _WXKVOInfoState) {
 }
 
 - (NSUInteger)hash {
-    return [_observer hash];
+    return _hash;
 }
 
 - (BOOL)isEqual:(id)object {
@@ -123,10 +126,11 @@ typedef NS_ENUM(uint8_t, _WXKVOInfoState) {
 @implementation _WXKVOController
 
 - (void)dealloc {
+#if DEBUG
     NSLog(@"when dealloc, observerInfos is :\n %@", self.observerInfos);
+#endif
     [self.observerInfos enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull key, NSMutableSet<_WXKVOInfo *> * _Nonnull obj, BOOL * _Nonnull stop) {
         if (obj.count > 0) {
-            NSLog(@"call remove observer");
             [self.observed removeObserver: self forKeyPath: key];
         }
     }];
@@ -150,7 +154,20 @@ typedef NS_ENUM(uint8_t, _WXKVOInfoState) {
     _WXKVOInfo *savedInfo = [registeredInfos member: info];
     if (nil == savedInfo) {
         [registeredInfos addObject: info];
-        NSLog(@"after add kvoInfo, infos is %@", self.observerInfos);
+        
+        __weak _WXKVOInfo *weakInfo = info;
+        __weak _WXKVOController *weakSelf = self;
+        __weak NSMutableSet *weakRegisteredInfos = registeredInfos;
+        [info->_observer wx_addDeallocBlock:^{
+            _WXKVOInfo *strongInfo = weakInfo;
+            _WXKVOController *strongSelf = weakSelf;
+            NSMutableSet *strongRegisteredInfos = weakRegisteredInfos;
+            
+            if (strongInfo) {
+                [strongRegisteredInfos removeObject: strongInfo];
+                [strongSelf.observed removeObserver: strongSelf forKeyPath: strongInfo->_keyPath context: (__bridge void*)strongInfo];
+            }
+        }];
         [self.observed addObserver: self forKeyPath: info->_keyPath options: info->_options context: (__bridge void*)info];
         
         if (info->_state == _WXKVOInfoStateInitial) {
@@ -165,7 +182,7 @@ typedef NS_ENUM(uint8_t, _WXKVOInfoState) {
         }
     }
     else {
-#if _DEBUG
+#if DEBUG
         NSLog(@"the observer has already been added, do nothing");
 #endif
     }
@@ -179,13 +196,12 @@ typedef NS_ENUM(uint8_t, _WXKVOInfoState) {
     
     _WXKVOInfo *savedInfo = [registeredInfos member: info];
     if (nil == savedInfo) {
-#if _DEBUG
+#if DEBUG
         NSLog(@"the observer has not been added, do nothing");
 #endif
     }
     else {
         [registeredInfos removeObject: savedInfo];
-        NSLog(@"remove self.observerInfos is %@", self.observerInfos);
         
         if (savedInfo->_state == _WXKVOInfoStateObserving) {
             [self.observed removeObserver: self forKeyPath: info->_keyPath context: (__bridge void*)savedInfo];
@@ -197,15 +213,6 @@ typedef NS_ENUM(uint8_t, _WXKVOInfoState) {
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context {
     _WXKVOInfo *kvoInfo = (__bridge _WXKVOInfo*)context;
     NSObject *observer = kvoInfo->_observer;
-    if (nil == observer) {
-        NSLog(@"observeValueForKeyPath before remove, observerInfos is %@, kvoInfo is %@", self.observerInfos, kvoInfo);
-        NSMutableSet<_WXKVOInfo*> *registeredInfos = self.observerInfos[keyPath];
-        [registeredInfos removeObject: kvoInfo];
-        [self.observed removeObserver: self forKeyPath: kvoInfo->_keyPath context: (void*)kvoInfo];
-        NSLog(@"observeValueForKeyPath after remove, observerInfos is %@", self.observerInfos);
-        return;
-    }
-    
     NSMutableDictionary *changeDic = [change mutableCopy];
     changeDic[WXKVONotificationKeyPathKey] = keyPath;
     
